@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">ScavengerHunt</string>
+    <string name="inference_image_desc">This is where the test image will go</string>
+    <string name="category_label_desc">Deep learning category label</string>
+    <string name="latency_text_desc">How long it takes to generate a category label</string>
+    <string name="toggle_text_off">Off-device</string>
+    <string name="toggle_text_on">On-device</string>
+    <string name="change_picture_desc">Changes ImageView to random picture from assets</string>
+    <string name="check_image_text">&#x1F171;heck image</string>
+    <string name="press_change_pic">Press the Change Picture button to get started!</string>
+    <string name="latency_start">Press &#x1F171;heck image to see if you got the right picture!</string>
+    <string name="running">Running inference in background thread…</string>
+    <string name="calculating">Calculating…</string>
+    <string name="target_image_label">Press Get New Target Image to get started!</string>
+    <string name="target_image_label_desc">Displays the target deep inference category for the user to take a picture of</string>
+    <string name="capture_image_text">&#x1F4F7; Take picture!</string>
+    <string name="get_new_target_text">Get new target image</string>
 </resources>

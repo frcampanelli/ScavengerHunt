@@ -21,4 +21,10 @@
     <string name="start_hunt_text">Click here to start a scavenger hunt!</string>
     <string name="start_hunt_desc">onClick, prompts for username and switches to hunting activity</string>
     <string name="username">Enter your user name here.</string>
+    <string name="failed">The picture doesn\'t seem to contain the target</string>
+    <string name="current_target">Your current target is %1$s</string>
+    <string name="take_pic_with_target">Take a picture containing the target</string>
+    <string name="target_found">We found the target in your picture (%1$s)</string>
+    <string name="target_not_found">The picture doesn\'t seem to contain the target</string>
+    <string name="time_up">Time\'s up!</string>
 </resources>

@@ -1,8 +1,6 @@
 package wpi.team1021.scavengerhunt;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -34,7 +31,6 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
@@ -52,7 +48,6 @@ public class CaptureAndInference extends AppCompatActivity {
 
     private String TAG = "wpi.team1021.scavengerhunt";
     private ImageView mCapturedImage;
-    private PackageManager packageManager;
     private File dir;
     private File temp;
     private String mCurrentPhotoPath;
@@ -60,20 +55,12 @@ public class CaptureAndInference extends AppCompatActivity {
     private Bitmap currentPhotoBitmap;
     private TextView mTargetImageLabel;
     private TextView mCheckInferenceLabel;
-    private Button mCheckInferenceButton;
     private ToggleButton mOffDeviceToggle;
-    private Button mCaptureImageButton;
-    private Button mGetNewTargetButton;
     private String randId;
     private TextView mTimerLabel;
     private ByteBuffer imgData;
-    private int DIM_BATCH_SIZE = 1;
     private int SIZE_X = 299;
     private int SIZE_Y = 299;
-    private int DIM_PIXEL_SIZE = 3;
-    private int NUM_BYTES_PER_CHANNEL = 4;
-    private int IMAGE_MEAN = 128;
-    private float IMAGE_STD = 128.0f;
     private ArrayList<String> mLabels;
     private String currentLabel = "";
     private Integer currentPoints = 0;
@@ -87,23 +74,22 @@ public class CaptureAndInference extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_capture_and_inference);
-        packageManager = getPackageManager();
         dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
             temp = File.createTempFile("temp", "jpeg", dir);
         } catch (java.io.IOException e) {
             return;
         }
-        mCapturedImage = (ImageView) findViewById(R.id.captured_image);
-        mTargetImageLabel = (TextView) findViewById(R.id.target_image_label);
+        mCapturedImage = findViewById(R.id.captured_image);
+        mTargetImageLabel = findViewById(R.id.target_image_label);
         mTargetImageLabel.setText(R.string.target_image_label);
-        mCheckInferenceLabel = (TextView) findViewById(R.id.check_inference_label);
+        mCheckInferenceLabel = findViewById(R.id.check_inference_label);
         mCheckInferenceLabel.setText(R.string.check_correct);
-        mCheckInferenceButton = (Button) findViewById(R.id.check_inference_button);
-        mOffDeviceToggle = (ToggleButton) findViewById(R.id.off_device_toggle);
-        mCaptureImageButton = (Button) findViewById(R.id.capture_image_button);
-        mGetNewTargetButton = (Button) findViewById(R.id.get_new_target_button);
-        mTimerLabel = (TextView) findViewById(R.id.timer_label);
+        mOffDeviceToggle = findViewById(R.id.off_device_toggle);
+        mTimerLabel = findViewById(R.id.timer_label);
+        int DIM_PIXEL_SIZE = 3;
+        int NUM_BYTES_PER_CHANNEL = 4;
+        int DIM_BATCH_SIZE = 1;
         imgData = ByteBuffer.allocateDirect(
                 DIM_BATCH_SIZE
                         * SIZE_X
@@ -125,7 +111,7 @@ public class CaptureAndInference extends AppCompatActivity {
             return;
         }
         currentPhotoBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
-        ImageView mImageView = (ImageView) findViewById(R.id.captured_image);
+        ImageView mImageView = findViewById(R.id.captured_image);
         mImageView.setImageBitmap(currentPhotoBitmap);
         mCheckInferenceLabel.setText(R.string.check_correct);
     }
@@ -138,7 +124,7 @@ public class CaptureAndInference extends AppCompatActivity {
         }
 
         public void onFinish() {
-            mTimerLabel.setText("Time's up!");
+            mTimerLabel.setText(R.string.time_up);
         }
     }.start();
 
@@ -160,7 +146,6 @@ public class CaptureAndInference extends AppCompatActivity {
         Uri photoURI = FileProvider.getUriForFile(this, "wpi.team1021.scavengerhunt.fileprovider", temp);
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-        List<ResolveInfo> activities = packageManager.queryIntentActivities(takePictureIntent, 0);
         startActivityForResult(takePictureIntent, 400);
         mCurrentPhotoPath = temp.getAbsolutePath();
         mCurrentPhotoName = temp.getName();
@@ -172,7 +157,6 @@ public class CaptureAndInference extends AppCompatActivity {
         } else {
             offDeviceInference(v);  //Otherwise do it off-device
         }
-        //TODO database update
         mDb = AppDatabase.getInMemoryDatabase(getApplication());
         mDb.huntModel().updatePointsById(randId, currentPoints);
     }
@@ -191,8 +175,8 @@ public class CaptureAndInference extends AppCompatActivity {
 
         currentLabel = mLabels.get(random);
         mCapturedImage.setImageResource(R.mipmap.ic_launcher_round);
-        mTargetImageLabel.setText("Your current target is " + currentLabel);
-        mCheckInferenceLabel.setText("Take a picture containing the target and then check the image!");
+        mTargetImageLabel.setText(getString(R.string.current_target, currentLabel));
+        mCheckInferenceLabel.setText(R.string.take_pic_with_target);
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
@@ -227,6 +211,8 @@ public class CaptureAndInference extends AppCompatActivity {
     }
 
     protected void addPixelValue(int pixelValue) {
+        int IMAGE_MEAN = 128;
+        float IMAGE_STD = 128.0f;
         imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
         imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
         imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
@@ -283,10 +269,10 @@ public class CaptureAndInference extends AppCompatActivity {
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
             //mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
             if (mLabels.get(maxIndex).contains(currentLabel)) {
-                mTargetImageLabel.setText("We found the target in your picture (" + mLabels.get(maxIndex) + max * 100 +")");
+                mTargetImageLabel.setText(String.format(Locale.US, "We found the target in your picture (%s%f)", mLabels.get(maxIndex), max*100));
                 currentPoints++;
             } else {
-                mTargetImageLabel.setText("The picture doesn't seem to contain the target");
+                mTargetImageLabel.setText(R.string.failed);
             }
             mCheckInferenceLabel.setText(String.format(Locale.US, "Your device took %dms to process", timeInterval));
         }
@@ -334,10 +320,10 @@ public class CaptureAndInference extends AppCompatActivity {
             Log.d("RESPONSE","Response body: " + result);
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
             if (result.contains(currentLabel)) {
-                mTargetImageLabel.setText("We found the target in your picture (" + result +")");
+                mTargetImageLabel.setText(getString(R.string.target_found, result));
                 currentPoints++;
             } else {
-                mTargetImageLabel.setText("The picture doesn't seem to contain the target");
+                mTargetImageLabel.setText(R.string.target_not_found);
             }
 
             mCheckInferenceLabel.setText(String.format(Locale.US, "Server took %dms to process", timeInterval));

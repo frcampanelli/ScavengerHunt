@@ -100,10 +100,9 @@ public class MainActivity extends AppCompatActivity {
             // Generate random id string
             Random generator = new Random();
             StringBuilder randomStringBuilder = new StringBuilder();
-            int randomLength = generator.nextInt(8);
             char tempChar;
-            for (int i = 0; i < randomLength; i++){
-                tempChar = (char) (generator.nextInt(96) + 32);
+            for (int i = 0; i < 5; i++){
+                tempChar = (char) (generator.nextInt(26) + 97);
                 randomStringBuilder.append(tempChar);
             }
             randId = randomStringBuilder.toString();

@@ -16,9 +16,6 @@ import static android.arch.persistence.room.OnConflictStrategy.REPLACE;
 @TypeConverters(DateConverter.class)
 public interface HuntDao {
 
-    @Query("select * from Hunt where id = :id")
-    Hunt loadHuntsById(int id);
-
     @Query("SELECT * FROM Hunt")
     LiveData<List<Hunt>> getAllHunts();
     
@@ -27,9 +24,6 @@ public interface HuntDao {
 
     @Query("UPDATE Hunt SET points=:points WHERE id = :id")
     void updatePointsById(String id, int points);
-
-    @Query("SELECT * FROM Hunt")
-    List<Hunt> getAllHuntsSync();
 
     @Query("SELECT * FROM Hunt WHERE name = :name")
     List<Hunt> findAllHuntsByName(String name);

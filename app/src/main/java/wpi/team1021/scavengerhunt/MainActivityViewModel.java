@@ -33,9 +33,6 @@ public class MainActivityViewModel extends AndroidViewModel {
     public void createDb() {
         mDb = AppDatabase.getInMemoryDatabase(getApplication());
 
-        //Test to add hunts
-        DatabaseUtils.populateAsync(mDb);
-
         // Receive changes
         subscribeToDbChanges();
     }

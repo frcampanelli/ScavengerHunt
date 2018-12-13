@@ -44,6 +44,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import wpi.team1021.scavengerhunt.huntDB.AppDatabase;
 
 import static android.graphics.Bitmap.createScaledBitmap;
 
@@ -80,6 +81,7 @@ public class CaptureAndInference extends AppCompatActivity {
     private String hostUrl = "http://35.243.243.163:54321/inception";
     private Long startTime;
     private Long timeInterval;
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,7 +172,9 @@ public class CaptureAndInference extends AppCompatActivity {
         } else {
             offDeviceInference(v);  //Otherwise do it off-device
         }
-        //TODO
+        //TODO database update
+        mDb = AppDatabase.getInMemoryDatabase(getApplication());
+        mDb.huntModel().updatePointsById(randId, currentPoints);
     }
 
     public void onDeviceInference(View v) {
@@ -186,6 +190,7 @@ public class CaptureAndInference extends AppCompatActivity {
         int random = rand.nextInt(1000);
 
         currentLabel = mLabels.get(random);
+        mCapturedImage.setImageResource(R.mipmap.ic_launcher_round);
         mTargetImageLabel.setText("Your current target is " + currentLabel);
         mCheckInferenceLabel.setText("Take a picture containing the target and then check the image!");
     }

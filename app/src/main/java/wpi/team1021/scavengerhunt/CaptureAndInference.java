@@ -63,6 +63,7 @@ public class CaptureAndInference extends AppCompatActivity {
     private ToggleButton mOffDeviceToggle;
     private Button mCaptureImageButton;
     private Button mGetNewTargetButton;
+    private String randId;
     private TextView mTimerLabel;
     private ByteBuffer imgData;
     private int DIM_BATCH_SIZE = 1;
@@ -111,6 +112,8 @@ public class CaptureAndInference extends AppCompatActivity {
         mLabels = new ArrayList<String>();
         readLabels();
         labelProbArray = new float[DIM_BATCH_SIZE][mLabels.size()];
+        Intent intent = getIntent();
+        randId = intent.getStringExtra("RANDOM_ID");
     }
 
     @Override
@@ -167,6 +170,7 @@ public class CaptureAndInference extends AppCompatActivity {
         } else {
             offDeviceInference(v);  //Otherwise do it off-device
         }
+        //TODO
     }
 
     public void onDeviceInference(View v) {

@@ -20,7 +20,7 @@ public class DatabaseUtils {
         task.execute();
     }
 
-    private static Hunt addHunt(final AppDatabase db, final String id, final Date startTime,
+    public static void addHunt(final AppDatabase db, final String id, final Date startTime,
                                 final String name, final int points) {
         Hunt hunt = new Hunt();
         hunt.id = id;
@@ -28,7 +28,6 @@ public class DatabaseUtils {
         hunt.name = name;
         hunt.points = points;
         db.huntModel().insertHunts(hunt);
-        return hunt;
     }
 
     private static void populateWithTestData(AppDatabase db) {

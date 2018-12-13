@@ -7,6 +7,7 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Transformations;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -22,6 +23,9 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public MainActivityViewModel(Application application) { super(application); }
 
+    public void addHunt(String id, String username, Date startTime){
+        DatabaseUtils.addHunt(mDb, id, startTime, username, 0);
+    }
     public LiveData<String> getHuntHistoryResult() {
         return mHuntHistoryResult;
     }

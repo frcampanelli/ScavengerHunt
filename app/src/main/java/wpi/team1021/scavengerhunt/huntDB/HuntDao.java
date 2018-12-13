@@ -26,7 +26,7 @@ public interface HuntDao {
     LiveData<List<Hunt>> getAllHuntsByMostPoints();
 
     @Query("UPDATE Hunt SET points=:points WHERE id = :id")
-    void updatePointsById(int id, int points);
+    void updatePointsById(String id, int points);
 
     @Query("SELECT * FROM Hunt")
     List<Hunt> getAllHuntsSync();

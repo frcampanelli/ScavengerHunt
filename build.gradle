@@ -25,3 +25,10 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+ext {
+    rulesVersion = "1.0.1"
+    espressoVersion = "3.0.2"
+    archLifecycleVersion = "1.1.0"
+    archRoomVersion = "1.0.0"
+}

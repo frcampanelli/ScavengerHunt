@@ -35,6 +35,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -70,6 +71,8 @@ public class CaptureAndInference extends AppCompatActivity {
     private int IMAGE_MEAN = 128;
     private float IMAGE_STD = 128.0f;
     private ArrayList<String> mLabels;
+    private String currentLabel = "";
+    private Integer currentPoints = 0;
     private float[][] labelProbArray;
     private String hostUrl = "http://35.243.243.163:54321/inception";
     private Long startTime;
@@ -90,7 +93,7 @@ public class CaptureAndInference extends AppCompatActivity {
         mTargetImageLabel = (TextView) findViewById(R.id.target_image_label);
         mTargetImageLabel.setText(R.string.target_image_label);
         mCheckInferenceLabel = (TextView) findViewById(R.id.check_inference_label);
-        mCheckInferenceLabel.setText(R.string.latency_start);
+        mCheckInferenceLabel.setText(R.string.check_correct);
         mCheckInferenceButton = (Button) findViewById(R.id.check_inference_button);
         mOffDeviceToggle = (ToggleButton) findViewById(R.id.off_device_toggle);
         mCaptureImageButton = (Button) findViewById(R.id.capture_image_button);
@@ -105,15 +108,6 @@ public class CaptureAndInference extends AppCompatActivity {
         mLabels = new ArrayList<String>();
         readLabels();
         labelProbArray = new float[DIM_BATCH_SIZE][mLabels.size()];
-        /*
-        InputStream image_stream = null;
-        try {
-            image_stream = getAssets().open("0.jpg");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mCapturedImage.setImageBitmap(BitmapFactory.decodeStream(image_stream));
-        */
     }
 
     @Override
@@ -165,6 +159,15 @@ public class CaptureAndInference extends AppCompatActivity {
 
     public void offDeviceInference(View v) {
         new offDeviceInferenceASync().execute(mCurrentPhotoName);
+    }
+
+    public void getNewTarget(View v) {
+        Random rand = new Random();
+        int random = rand.nextInt(1000);
+
+        currentLabel = mLabels.get(random);
+        mTargetImageLabel.setText("Your current target is " + currentLabel);
+        mCheckInferenceLabel.setText("Take a picture containing the target and then check the image!");
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
@@ -253,8 +256,14 @@ public class CaptureAndInference extends AppCompatActivity {
             //Log.i(TAG, "Max is: " + max + " with index: " + maxIndex);
 
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
-            mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
-            mCheckInferenceLabel.setText(String.format(Locale.US, "%dms", timeInterval));
+            //mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
+            if (mLabels.get(maxIndex).contains(currentLabel)) {
+                mTargetImageLabel.setText("We found the target in your picture (" + mLabels.get(maxIndex) + max * 100 +")");
+                currentPoints++;
+            } else {
+                mTargetImageLabel.setText("The picture doesn't seem to contain the target");
+            }
+            mCheckInferenceLabel.setText(String.format(Locale.US, "Your device took %dms to process", timeInterval));
         }
     }
     private class offDeviceInferenceASync extends AsyncTask<String, Float, String> {
@@ -299,7 +308,13 @@ public class CaptureAndInference extends AppCompatActivity {
         protected void onPostExecute(String result) {
             Log.d("RESPONSE","Response body: " + result);
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
-            mTargetImageLabel.setText(String.format(Locale.US, "%s", result));
+            if (result.contains(currentLabel)) {
+                mTargetImageLabel.setText("We found the target in your picture (" + result +")");
+                currentPoints++;
+            } else {
+                mTargetImageLabel.setText("The picture doesn't seem to contain the target");
+            }
+
             mCheckInferenceLabel.setText(String.format(Locale.US, "Server took %dms to process", timeInterval));
         }
     }

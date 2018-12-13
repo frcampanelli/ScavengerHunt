@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.MediaStore;
@@ -62,6 +63,7 @@ public class CaptureAndInference extends AppCompatActivity {
     private ToggleButton mOffDeviceToggle;
     private Button mCaptureImageButton;
     private Button mGetNewTargetButton;
+    private TextView mTimerLabel;
     private ByteBuffer imgData;
     private int DIM_BATCH_SIZE = 1;
     private int SIZE_X = 299;
@@ -98,6 +100,7 @@ public class CaptureAndInference extends AppCompatActivity {
         mOffDeviceToggle = (ToggleButton) findViewById(R.id.off_device_toggle);
         mCaptureImageButton = (Button) findViewById(R.id.capture_image_button);
         mGetNewTargetButton = (Button) findViewById(R.id.get_new_target_button);
+        mTimerLabel = (TextView) findViewById(R.id.timer_label);
         imgData = ByteBuffer.allocateDirect(
                 DIM_BATCH_SIZE
                         * SIZE_X
@@ -121,6 +124,19 @@ public class CaptureAndInference extends AppCompatActivity {
         mImageView.setImageBitmap(currentPhotoBitmap);
         mCheckInferenceLabel.setText(R.string.check_correct);
     }
+
+    CountDownTimer timer = new CountDownTimer(3600000, 1000) {
+
+        public void onTick(long millisUntilFinished) {
+            mTimerLabel.setText(String.format(Locale.US, "Time left: \n" +
+                    "%02d:%02d", millisUntilFinished/60000, ((millisUntilFinished/1000) % 60)));
+        }
+
+        public void onFinish() {
+            mTimerLabel.setText("Time's up!");
+        }
+    }.start();
+
 
     private void readLabels() {
         try (BufferedReader reader = new BufferedReader(

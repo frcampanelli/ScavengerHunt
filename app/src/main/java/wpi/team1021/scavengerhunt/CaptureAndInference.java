@@ -38,6 +38,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import static android.graphics.Bitmap.createScaledBitmap;
 
 public class CaptureAndInference extends AppCompatActivity {
@@ -48,7 +55,7 @@ public class CaptureAndInference extends AppCompatActivity {
     private File dir;
     private File temp;
     private String mCurrentPhotoPath;
-    private String mCurrentPhotoFile;
+    private String mCurrentPhotoName;
     private Bitmap currentPhotoBitmap;
     private TextView mTargetImageLabel;
     private TextView mCheckInferenceLabel;
@@ -77,7 +84,7 @@ public class CaptureAndInference extends AppCompatActivity {
         packageManager = getPackageManager();
         dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
-            temp = File.createTempFile("temp", null, dir);
+            temp = File.createTempFile("temp", "jpeg", dir);
         } catch (java.io.IOException e) {
             return;
         }
@@ -141,18 +148,23 @@ public class CaptureAndInference extends AppCompatActivity {
         List<ResolveInfo> activities = packageManager.queryIntentActivities(takePictureIntent, 0);
         startActivityForResult(takePictureIntent, 400);
         mCurrentPhotoPath = temp.getAbsolutePath();
-        mCurrentPhotoFile = temp.getName();
+        mCurrentPhotoName = temp.getName();
     }
 
     public void onClickCheckInferenceButton(View v) {
         if(mOffDeviceToggle.isChecked()) {  //If button is checked then it is set to on-device inference
             onDeviceInference(v);
         } else {
-            //offDeviceInference(v);  //Otherwise do it off-device
+            offDeviceInference(v);  //Otherwise do it off-device
         }
     }
+
     public void onDeviceInference(View v) {
         new OnDeviceInferenceAsync().execute(currentPhotoBitmap);
+    }
+
+    public void offDeviceInference(View v) {
+        new RunInferenceAsync().execute(mCurrentPhotoName);
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
@@ -247,15 +259,15 @@ public class CaptureAndInference extends AppCompatActivity {
         }
     }
     //TODO never got it to save a file, and OkHttp3.x didnt like the sample code's MultipartBody.Builder() logic
-    /*private class RunInferenceAsync extends AsyncTask<String, Float, Long> {
-        String results;
+    private class RunInferenceAsync extends AsyncTask<String, Float, String> {
+        String result;
         String time;
 
         protected void onPreExecute() {
             // Stuff to do before inference starts
         }
 
-        protected Long doInBackground(String... img_files) {
+        protected String doInBackground(String... img_files) {
 
             String img_path = img_files[0];
 
@@ -263,8 +275,8 @@ public class CaptureAndInference extends AppCompatActivity {
             final MediaType MEDIA_TYPE_JPEG = MediaType.get("image/jpeg");
             OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = new MultipartBody.Builder()
-                    .setType(MultipartBuilder.FORM)
-                    .addFormDataPart("file", filename, RequestBody.create(MEDIA_TYPE_JPEG, file))
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", mCurrentPhotoName, RequestBody.create(MEDIA_TYPE_JPEG, temp))
                     .build();
 
             Request request = new Request.Builder()
@@ -272,15 +284,21 @@ public class CaptureAndInference extends AppCompatActivity {
                     .post(requestBody)
                     .build();
 
-            Response response = client.newCall(request).execute();
-            return null;
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+                result = response.body().string();
+
+            } catch (IOException e) {
+                Log.e("HTTPERROR", "Request error");
+                e.printStackTrace();
+            }
+            return result;
         }
 
-        protected void onPostExecute(Long result) {
-            // Stuff to do after inference ends
+        protected void onPostExecute(String result) {
+            Log.d("RESPONSE","Response body: " + result);
         }
     }
-    */
 }
 
 

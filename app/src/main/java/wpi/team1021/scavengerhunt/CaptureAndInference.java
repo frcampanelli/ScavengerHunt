@@ -61,6 +61,7 @@ public class CaptureAndInference extends AppCompatActivity {
     private ToggleButton mOffDeviceToggle;
     private Button mCaptureImageButton;
     private Button mGetNewTargetButton;
+    private String randId;
     private ByteBuffer imgData;
     private int DIM_BATCH_SIZE = 1;
     private int SIZE_X = 299;
@@ -90,7 +91,7 @@ public class CaptureAndInference extends AppCompatActivity {
         mTargetImageLabel = (TextView) findViewById(R.id.target_image_label);
         mTargetImageLabel.setText(R.string.target_image_label);
         mCheckInferenceLabel = (TextView) findViewById(R.id.check_inference_label);
-        mCheckInferenceLabel.setText(R.string.latency_start);
+        mCheckInferenceLabel.setText(R.string.check_correct);
         mCheckInferenceButton = (Button) findViewById(R.id.check_inference_button);
         mOffDeviceToggle = (ToggleButton) findViewById(R.id.off_device_toggle);
         mCaptureImageButton = (Button) findViewById(R.id.capture_image_button);
@@ -105,15 +106,8 @@ public class CaptureAndInference extends AppCompatActivity {
         mLabels = new ArrayList<String>();
         readLabels();
         labelProbArray = new float[DIM_BATCH_SIZE][mLabels.size()];
-        /*
-        InputStream image_stream = null;
-        try {
-            image_stream = getAssets().open("0.jpg");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mCapturedImage.setImageBitmap(BitmapFactory.decodeStream(image_stream));
-        */
+        Intent intent = getIntent();
+        randId = intent.getStringExtra("RANDOM_ID");
     }
 
     @Override
@@ -157,6 +151,7 @@ public class CaptureAndInference extends AppCompatActivity {
         } else {
             offDeviceInference(v);  //Otherwise do it off-device
         }
+        //TODO
     }
 
     public void onDeviceInference(View v) {

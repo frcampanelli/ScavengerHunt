@@ -36,13 +36,14 @@
                 android:id="@+id/refresh_history_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="onRefreshHistoryClicked"
+                android:onClick="onClickRefreshHistory"
                 android:text="@string/refresh" />
 
             <Button
                 android:id="@+id/start_hunt_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="onClickStartButton"
                 android:contentDescription="@string/start_hunt_desc"
                 android:text="@string/start_hunt_text" />
 

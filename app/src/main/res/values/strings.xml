@@ -20,4 +20,5 @@
     <string name="scavenger_hunt_history_label">Scavenger hunt history</string>
     <string name="start_hunt_text">Click here to start a scavenger hunt!</string>
     <string name="start_hunt_desc">onClick, prompts for username and switches to hunting activity</string>
+    <string name="username">Enter your user name here.</string>
 </resources>

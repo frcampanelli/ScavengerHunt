@@ -45,10 +45,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
         android:layout_weight="1"
         android:onClick="onClickCheckInferenceButton"
         android:text="@string/check_image_text"
         android:textAlignment="center"
+        app:layout_constraintBottom_toTopOf="@+id/get_new_target_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/off_device_toggle"
         app:layout_constraintTop_toBottomOf="@id/check_inference_label" />
@@ -58,9 +60,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
         android:checked="true"
         android:textOff="@string/toggle_text_off"
         android:textOn="@string/toggle_text_on"
+        app:layout_constraintBottom_toTopOf="@+id/get_new_target_button"
         app:layout_constraintEnd_toStartOf="@id/check_inference_button"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
@@ -83,8 +87,26 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="@string/get_new_target_text"
+        android:onClick="getNewTarget"
         app:layout_constraintBottom_toTopOf="@id/capture_image_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/timer_label"
+        android:layout_width="73dp"
+        android:layout_height="51dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="0"
+        android:textAlignment="textStart"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.055"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.988" />
 
 </android.support.constraint.ConstraintLayout>

@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.MediaStore;
@@ -35,6 +36,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -62,6 +64,7 @@ public class CaptureAndInference extends AppCompatActivity {
     private Button mCaptureImageButton;
     private Button mGetNewTargetButton;
     private String randId;
+    private TextView mTimerLabel;
     private ByteBuffer imgData;
     private int DIM_BATCH_SIZE = 1;
     private int SIZE_X = 299;
@@ -71,6 +74,8 @@ public class CaptureAndInference extends AppCompatActivity {
     private int IMAGE_MEAN = 128;
     private float IMAGE_STD = 128.0f;
     private ArrayList<String> mLabels;
+    private String currentLabel = "";
+    private Integer currentPoints = 0;
     private float[][] labelProbArray;
     private String hostUrl = "http://35.243.243.163:54321/inception";
     private Long startTime;
@@ -96,6 +101,7 @@ public class CaptureAndInference extends AppCompatActivity {
         mOffDeviceToggle = (ToggleButton) findViewById(R.id.off_device_toggle);
         mCaptureImageButton = (Button) findViewById(R.id.capture_image_button);
         mGetNewTargetButton = (Button) findViewById(R.id.get_new_target_button);
+        mTimerLabel = (TextView) findViewById(R.id.timer_label);
         imgData = ByteBuffer.allocateDirect(
                 DIM_BATCH_SIZE
                         * SIZE_X
@@ -121,6 +127,19 @@ public class CaptureAndInference extends AppCompatActivity {
         mImageView.setImageBitmap(currentPhotoBitmap);
         mCheckInferenceLabel.setText(R.string.check_correct);
     }
+
+    CountDownTimer timer = new CountDownTimer(3600000, 1000) {
+
+        public void onTick(long millisUntilFinished) {
+            mTimerLabel.setText(String.format(Locale.US, "Time left: \n" +
+                    "%02d:%02d", millisUntilFinished/60000, ((millisUntilFinished/1000) % 60)));
+        }
+
+        public void onFinish() {
+            mTimerLabel.setText("Time's up!");
+        }
+    }.start();
+
 
     private void readLabels() {
         try (BufferedReader reader = new BufferedReader(
@@ -160,6 +179,15 @@ public class CaptureAndInference extends AppCompatActivity {
 
     public void offDeviceInference(View v) {
         new offDeviceInferenceASync().execute(mCurrentPhotoName);
+    }
+
+    public void getNewTarget(View v) {
+        Random rand = new Random();
+        int random = rand.nextInt(1000);
+
+        currentLabel = mLabels.get(random);
+        mTargetImageLabel.setText("Your current target is " + currentLabel);
+        mCheckInferenceLabel.setText("Take a picture containing the target and then check the image!");
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
@@ -248,8 +276,14 @@ public class CaptureAndInference extends AppCompatActivity {
             //Log.i(TAG, "Max is: " + max + " with index: " + maxIndex);
 
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
-            mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
-            mCheckInferenceLabel.setText(String.format(Locale.US, "%dms", timeInterval));
+            //mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
+            if (mLabels.get(maxIndex).contains(currentLabel)) {
+                mTargetImageLabel.setText("We found the target in your picture (" + mLabels.get(maxIndex) + max * 100 +")");
+                currentPoints++;
+            } else {
+                mTargetImageLabel.setText("The picture doesn't seem to contain the target");
+            }
+            mCheckInferenceLabel.setText(String.format(Locale.US, "Your device took %dms to process", timeInterval));
         }
     }
     private class offDeviceInferenceASync extends AsyncTask<String, Float, String> {
@@ -294,7 +328,13 @@ public class CaptureAndInference extends AppCompatActivity {
         protected void onPostExecute(String result) {
             Log.d("RESPONSE","Response body: " + result);
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
-            mTargetImageLabel.setText(String.format(Locale.US, "%s", result));
+            if (result.contains(currentLabel)) {
+                mTargetImageLabel.setText("We found the target in your picture (" + result +")");
+                currentPoints++;
+            } else {
+                mTargetImageLabel.setText("The picture doesn't seem to contain the target");
+            }
+
             mCheckInferenceLabel.setText(String.format(Locale.US, "Server took %dms to process", timeInterval));
         }
     }

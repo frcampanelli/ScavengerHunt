@@ -1,10 +1,17 @@
 package wpi.team1021.scavengerhunt;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +24,7 @@ import android.widget.ToggleButton;
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +34,7 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
@@ -35,6 +44,12 @@ public class CaptureAndInference extends AppCompatActivity {
 
     private String TAG = "wpi.team1021.scavengerhunt";
     private ImageView mCapturedImage;
+    private PackageManager packageManager;
+    private File dir;
+    private File temp;
+    private String mCurrentPhotoPath;
+    private String mCurrentPhotoFile;
+    private Bitmap currentPhotoBitmap;
     private TextView mTargetImageLabel;
     private TextView mCheckInferenceLabel;
     private Button mCheckInferenceButton;
@@ -59,6 +74,13 @@ public class CaptureAndInference extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_capture_and_inference);
+        packageManager = getPackageManager();
+        dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        try {
+            temp = File.createTempFile("temp", null, dir);
+        } catch (java.io.IOException e) {
+            return;
+        }
         mCapturedImage = (ImageView) findViewById(R.id.captured_image);
         mTargetImageLabel = (TextView) findViewById(R.id.target_image_label);
         mTargetImageLabel.setText(R.string.target_image_label);
@@ -89,6 +111,16 @@ public class CaptureAndInference extends AppCompatActivity {
         */
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if ((requestCode != 400) || (resultCode != RESULT_OK)) {
+            return;
+        }
+        currentPhotoBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
+        ImageView mImageView = (ImageView) findViewById(R.id.captured_image);
+        mImageView.setImageBitmap(currentPhotoBitmap);
+    }
+
     private void readLabels() {
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(getAssets().open("model/labels.txt")))) {
@@ -103,7 +135,13 @@ public class CaptureAndInference extends AppCompatActivity {
     }
 
     public void onClickTakePictureButton(View v) {
-        //TODO add camera image capture here from Project2
+        Uri photoURI = FileProvider.getUriForFile(this, "wpi.team1021.scavengerhunt.fileprovider", temp);
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+        List<ResolveInfo> activities = packageManager.queryIntentActivities(takePictureIntent, 0);
+        startActivityForResult(takePictureIntent, 400);
+        mCurrentPhotoPath = temp.getAbsolutePath();
+        mCurrentPhotoFile = temp.getName();
     }
 
     public void onClickCheckInferenceButton(View v) {
@@ -114,16 +152,7 @@ public class CaptureAndInference extends AppCompatActivity {
         }
     }
     public void onDeviceInference(View v) {
-        //TODO change this to use the image that the user takes, possibly from a saved file or file descriptor
-        startTime = SystemClock.uptimeMillis();  //Start timing
-        InputStream image_stream = null;
-        Random rand = new Random();
-        try {
-            image_stream = getAssets().open("imgs/" + rand.nextInt(4) + ".jpg");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        new OnDeviceInferenceAsync().execute(image_stream);
+        new OnDeviceInferenceAsync().execute(currentPhotoBitmap);
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
@@ -164,7 +193,7 @@ public class CaptureAndInference extends AppCompatActivity {
     }
 
 
-    private class OnDeviceInferenceAsync extends AsyncTask<InputStream, Float, InputStream> {
+    private class OnDeviceInferenceAsync extends AsyncTask<Bitmap, Void, Bitmap> {
         String time;
 
         protected void onPreExecute() {
@@ -174,9 +203,9 @@ public class CaptureAndInference extends AppCompatActivity {
             mCheckInferenceLabel.setText(R.string.calculating);
         }
 
-        protected InputStream doInBackground(InputStream... streams) {
+        protected Bitmap doInBackground(Bitmap... bitmaps) {
 
-            InputStream image_stream = streams[0];
+            Bitmap image_bitmap = bitmaps[0];
 
             // Do inference here!
             Interpreter tflite = null;
@@ -187,17 +216,17 @@ public class CaptureAndInference extends AppCompatActivity {
                 Log.e(TAG, e.getMessage());
             }
 
-            Bitmap scaledBitmap = createScaledBitmap(BitmapFactory.decodeStream(image_stream), SIZE_X, SIZE_Y, false);
+            Bitmap scaledBitmap = createScaledBitmap(image_bitmap, SIZE_X, SIZE_Y, false);
             convertBitmapToByteBuffer(scaledBitmap);
             try {
                 tflite.run(imgData, labelProbArray);
             } catch(NullPointerException e) {
                 Log.e(TAG, e.getMessage());
             }
-            return image_stream;
+            return image_bitmap;
         }
 
-        protected void onPostExecute(InputStream image_stream) {
+        protected void onPostExecute(Bitmap image_bitmap) {
             // Stuff to do after inference ends
             float max = labelProbArray[0][0];
             int maxIndex = 0;
@@ -213,7 +242,7 @@ public class CaptureAndInference extends AppCompatActivity {
 
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
             mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
-            mCapturedImage.setImageBitmap(BitmapFactory.decodeStream(image_stream));
+            mCapturedImage.setImageBitmap(image_bitmap);
             mCheckInferenceLabel.setText(String.format(Locale.US, "%dms", timeInterval));
         }
     }

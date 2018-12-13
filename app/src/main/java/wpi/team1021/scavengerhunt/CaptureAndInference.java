@@ -27,7 +27,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -36,7 +35,6 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -121,11 +119,13 @@ public class CaptureAndInference extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if ((requestCode != 400) || (resultCode != RESULT_OK)) {
+            //Failed request
             return;
         }
         currentPhotoBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
         ImageView mImageView = (ImageView) findViewById(R.id.captured_image);
         mImageView.setImageBitmap(currentPhotoBitmap);
+        mCheckInferenceLabel.setText(R.string.check_correct);
     }
 
     private void readLabels() {
@@ -164,7 +164,7 @@ public class CaptureAndInference extends AppCompatActivity {
     }
 
     public void offDeviceInference(View v) {
-        new RunInferenceAsync().execute(mCurrentPhotoName);
+        new offDeviceInferenceASync().execute(mCurrentPhotoName);
     }
 
     private MappedByteBuffer loadModelFile() throws IOException {
@@ -254,17 +254,18 @@ public class CaptureAndInference extends AppCompatActivity {
 
             timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
             mTargetImageLabel.setText(String.format(Locale.US, "%s: %f%%", mLabels.get(maxIndex), max*100));
-            mCapturedImage.setImageBitmap(image_bitmap);
             mCheckInferenceLabel.setText(String.format(Locale.US, "%dms", timeInterval));
         }
     }
-    //TODO never got it to save a file, and OkHttp3.x didnt like the sample code's MultipartBody.Builder() logic
-    private class RunInferenceAsync extends AsyncTask<String, Float, String> {
+    private class offDeviceInferenceASync extends AsyncTask<String, Float, String> {
         String result;
         String time;
 
         protected void onPreExecute() {
             // Stuff to do before inference starts
+            startTime = SystemClock.uptimeMillis();  //Start timing
+            mTargetImageLabel.setText(R.string.running);
+            mCheckInferenceLabel.setText(R.string.calculating);
         }
 
         protected String doInBackground(String... img_files) {
@@ -297,6 +298,9 @@ public class CaptureAndInference extends AppCompatActivity {
 
         protected void onPostExecute(String result) {
             Log.d("RESPONSE","Response body: " + result);
+            timeInterval = SystemClock.uptimeMillis() - startTime;  //Stop timing and get interval
+            mTargetImageLabel.setText(String.format(Locale.US, "%s", result));
+            mCheckInferenceLabel.setText(String.format(Locale.US, "Server took %dms to process", timeInterval));
         }
     }
 }

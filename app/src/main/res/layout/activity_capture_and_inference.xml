@@ -58,7 +58,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:checked="false"
+        android:checked="true"
         android:textOff="@string/toggle_text_off"
         android:textOn="@string/toggle_text_on"
         app:layout_constraintEnd_toStartOf="@id/check_inference_button"

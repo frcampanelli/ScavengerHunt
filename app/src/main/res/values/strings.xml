@@ -15,4 +15,9 @@
     <string name="target_image_label_desc">Displays the target deep inference category for the user to take a picture of</string>
     <string name="capture_image_text">&#x1F4F7; Take picture!</string>
     <string name="get_new_target_text">Get new target image</string>
+    <string name="hunt_history_desc">Lists the previous scavenger hunts</string>
+    <string name="refresh">Refresh History</string>
+    <string name="scavenger_hunt_history_label">Scavenger hunt history</string>
+    <string name="start_hunt_text">Click here to start a scavenger hunt!</string>
+    <string name="start_hunt_desc">onClick, prompts for username and switches to hunting activity</string>
 </resources>

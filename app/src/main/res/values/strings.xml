@@ -6,9 +6,9 @@
     <string name="toggle_text_off">Off-device</string>
     <string name="toggle_text_on">On-device</string>
     <string name="change_picture_desc">Changes ImageView to random picture from assets</string>
-    <string name="check_image_text">&#x1F171;heck image</string>
+    <string name="check_image_text">Check image</string>
     <string name="press_change_pic">Press the Change Picture button to get started!</string>
-    <string name="check_correct">Press &#x1F171;heck image to see if you got the right picture!</string>
+    <string name="check_correct">Press Check image to see if you got the right picture!</string>
     <string name="running">Running inference in background thread…</string>
     <string name="calculating">Calculating…</string>
     <string name="target_image_label">Press Get New Target Image to get started!</string>

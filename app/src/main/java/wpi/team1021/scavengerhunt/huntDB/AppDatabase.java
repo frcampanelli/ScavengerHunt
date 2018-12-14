@@ -13,7 +13,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract HuntDao huntModel();
 
-    public static AppDatabase getInMemoryDatabase(Context context) {
+    public static AppDatabase getInMemoryDatabase(final Context context) {
         if (INSTANCE == null) {
             INSTANCE =
                     Room.inMemoryDatabaseBuilder(context.getApplicationContext(), AppDatabase.class)

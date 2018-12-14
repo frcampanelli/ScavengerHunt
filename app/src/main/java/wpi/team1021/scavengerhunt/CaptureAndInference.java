@@ -41,6 +41,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import wpi.team1021.scavengerhunt.huntDB.AppDatabase;
+import wpi.team1021.scavengerhunt.huntDB.HuntDao;
 
 import static android.graphics.Bitmap.createScaledBitmap;
 
@@ -157,8 +158,8 @@ public class CaptureAndInference extends AppCompatActivity {
         } else {
             offDeviceInference(v);  //Otherwise do it off-device
         }
-        mDb = AppDatabase.getInMemoryDatabase(getApplication());
-        mDb.huntModel().updatePointsById(randId, currentPoints);
+        HuntDao huntModel = AppDatabase.getInMemoryDatabase(getApplication()).huntModel();
+        huntModel.updatePointsById(randId, currentPoints);
     }
 
     public void onDeviceInference(View v) {
